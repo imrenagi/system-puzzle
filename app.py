@@ -5,6 +5,7 @@ from flask import Flask, render_template, redirect, url_for
 from forms import ItemForm
 from models import Items
 from database import db_session
+from flask import jsonify
 
 app = Flask(__name__)
 app.secret_key = os.environ['APP_SECRET_KEY']
@@ -22,12 +23,21 @@ def add_item():
 @app.route("/success")
 def success():
     results = []
- 
+
     qry = db_session.query(Items)
     results = qry.all()
 
-    return str(results)
-  
+    arr = []
+
+    for item in results:
+        lineItem = {}
+        lineItem["name"] = item.name
+        lineItem["quantity"] = item.quantity
+        lineItem["description"] = item.description
+        lineItem["date_added"] = item.date_added
+        arr.append(lineItem)
+
+    return jsonify(items=arr)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=5001)

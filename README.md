@@ -1,5 +1,37 @@
 # Insight DevOps Engineering Systems Puzzle
 
+
+# COMMENT
+
+3 Major bugs found:
+1. Flask server was running on its default port (5000), where it is supposed to be port 5001 because nginx and dockerfile show that they are using port 5001 instead of 5000. So, I added this modification in `app.py` so that the web server runs on port 5001.
+```
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5001)
+```
+2. Port used in nginx configuration in `docker-compose.yml` was wrong. Previously, it was "80:8080" where it is supposed to be "8080:80". The latest one means that port 8080 on the host must be forwarded to port 80 on the container. It is quite simple to find this mistake. I took a look into `conf.d/flaskapp.conf` and found that nginx is running on port 80. It means the port 80 should be opened on the container and port 8080 should be on the host side (this is also instructed on the readme :p)
+
+3. By using those fixes, I can see the web is up and running. However, after I submit an item on the web UI, I only see an empty array `[]` returned. So, I took a look into `app.py` and made some modification so that the items can be returned in json format. The modification is shown below:
+```
+@app.route("/success")
+def success():
+    results = []
+    qry = db_session.query(Items)
+    results = qry.all()
+    arr = []
+    for item in results:
+        lineItem = {}
+        lineItem["name"] = item.name
+        lineItem["quantity"] = item.quantity
+        lineItem["description"] = item.description
+        lineItem["date_added"] = item.date_added
+        arr.append(lineItem)
+    return jsonify(items=arr)
+```
+
+Thanks!
+Imre <imre.nagi2812@gmail.com>
+
 ## Table of Contents
 1. [Understanding the puzzle](README.md#understanding-the-puzzle)
 2. [Introduction](README.md#introduction)
@@ -30,12 +62,12 @@ This "bootstraps" the PostgreSQL database with the correct tables. After that yo
 
     docker-compose up -d
 
-At that point, the web application should be visible by going to `localhost:8080` in a web browser. 
+At that point, the web application should be visible by going to `localhost:8080` in a web browser.
 
 Once you've corrected the bugs and have the basic features working, commit the functional codebase to a new repo following the instructions below. As you debug the system, you should keep track of your thought process and what steps you took to solve the puzzle.
 
 ## Instructions to submit your solution
-* Don't schedule your interview until you've worked on the puzzle 
+* Don't schedule your interview until you've worked on the puzzle
 * To submit your entry please use the link you received in your systems puzzle invitation
 * You will only be able to submit through the link one time
 * For security, we will not open solutions submitted via files
@@ -64,4 +96,3 @@ No, you should focus on the functionality. Your engineering team will bring on a
 
 ### Should I use orchestration tools like Kubernetes?
 While technologies like Kubernetes are quite powerful, they're likely overkill for the simple application in this puzzle. We recommend that you stick to Docker Compose for this puzzle.
-
