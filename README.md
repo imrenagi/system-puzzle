@@ -29,6 +29,18 @@ def success():
     return jsonify(items=arr)
 ```
 
+## STORIES
+
+To start searching the bug, I start with `docker-compose.yaml` to see what services that will be spawned in order to
+run this application. Then, based on the instruction on the readme, I tried to follow those steps one by one. However, instead of run `docker-compose up -d`, I tried to run the application by running `docker-compose up` so that I can see the log of the running service. Since everything looked fine, I tried to open localhost:8080 in browser, but no luck.
+
+Then, I went back to `docker-compose.yaml` to see the order of the services startup. The very first service that must be running is postgres db, which ended up run normally. Then I go to the next service, which is the flask server. In the beginning, I tried to go to the bash shell of flask server container and make sure that the flask server runs on the correct port (which is port 5000 by default). However, I found out that the dockerfile exposed port 5001 instead and nginx also use port 5001 in its configuration. Thus, I assumed that I need to update the code on the flask server so that it runs on the port 5001 as explained on the points above. After that, I make sure that the flask server run properly on port 5001 by using `curl` from the inside of the container.
+
+The next bug was a bit tricky since I barely remember the way we write the port configuration in `docker -p` command or in `docker-compose`. So I went to google and then suddenly I realized there was something wrong with the `docker-compose.yaml` for nginx as I explained above. So, I change it and then the web server run.
+
+The last bug I found was the empty array returned after user submit the item. I did small work around by updating the `app.py` so that it returns json array of the items and I did it.
+
+
 Thanks!
 Imre <imre.nagi2812@gmail.com>
 
